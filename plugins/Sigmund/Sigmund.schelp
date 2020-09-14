@@ -1,0 +1,26 @@
+class:: Sigmund
+summary:: A port of Miller Puckette's Sigmund object to a SuperCollider UGen
+related:: TODO
+categories:: UGens>TODO
+
+description::
+
+A port of Miller Puckette's Sigmund object to a SuperCollider UGen
+
+
+classmethods::
+
+method::ar, kr
+
+argument::TODO
+
+argument::TODO
+
+
+examples::
+
+code::
+
+{ Sigmund.ar(/* TODO */) }.play
+
+::
