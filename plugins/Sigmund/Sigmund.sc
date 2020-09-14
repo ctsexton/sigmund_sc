@@ -1,7 +1,7 @@
-Sigmund : UGen {
-	*ar { |input, gain|
+Sigmund : MultiOutUGen {
+	*ar { |input, bufnum, numTracks|
 		/* TODO */
-		^this.multiNew('audio', input, gain);
+		^this.multiNew('audio', bufnum, numTracks, input);
 	}
 	checkInputs {
 		/* TODO */

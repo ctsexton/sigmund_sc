@@ -3,24 +3,34 @@
 
 #include "SC_PlugIn.hpp"
 #include "Sigmund.hpp"
+#include "sigmund.c"
 
-static InterfaceTable* ft;
+InterfaceTable* ft;
 
 namespace Sigmund {
 
 Sigmund::Sigmund() {
     mCalcFunc = make_calc_function<Sigmund, &Sigmund::next>();
+    numTracks = in0(1);
+    unit->mWorld = mWorld;
+    unit->mParent = mParent;
+    unit->mInBuf = mInBuf;
     next(1);
 }
 
 void Sigmund::next(int nSamples) {
-    const float* input = in(0);
-    const float* gain = in(0);
-    float* outbuf = out(0);
+    const float* input = in(2);
+    const int trackFrequency = 500;
+    const int trackAmplitude = 1;
+    const int trackStart = 0;
+    GET_BUF
 
-    // simple gain function
-    for (int i = 0; i < nSamples; ++i) {
-        outbuf[i] = input[i] * gain[i];
+    // write each track
+    for (int i = 0; i < numTracks; ++i) {
+      const int index = i * 3;
+      bufData[index] = trackFrequency;
+      bufData[index + 1] = trackAmplitude;
+      bufData[index + 2] = trackStart;
     }
 }
 
