@@ -3,7 +3,6 @@
 
 #include "SC_PlugIn.hpp"
 #include "Sigmund.hpp"
-#include "sigmund.c"
 
 InterfaceTable* ft;
 
@@ -12,9 +11,12 @@ namespace Sigmund {
 Sigmund::Sigmund() {
     mCalcFunc = make_calc_function<Sigmund, &Sigmund::next>();
     numTracks = in0(1);
+
+    // NECESSARY FOR GET_BUF
     unit->mWorld = mWorld;
     unit->mParent = mParent;
     unit->mInBuf = mInBuf;
+
     next(1);
 }
 

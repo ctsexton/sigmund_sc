@@ -20,6 +20,8 @@ private:
 
     // Member variables
     int numTracks = 0;
+
+    // NECESSARY FOR GET_BUF
     struct unitPlaceholder {
       float m_fbufnum;
       SndBuf* m_buf;
