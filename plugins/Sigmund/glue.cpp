@@ -168,18 +168,18 @@ static void sigmund_doit(t_sigmund *x, int npts, t_float *arraypoints,
     int nfound, i, cnt;
     t_float freq = 0, power, note = 0;
 
-    // IMPORT STUFF:
+    // IMPORTANT STUFF:
     sigmund_getrawpeaks(npts, arraypoints, x->x_npeak, peakv, &nfound, &power, srate, loud, x->x_maxfreq);
     sigmund_getpitch(nfound, peakv, &freq, npts, srate, x->x_param1, x->x_param2, loud);
     sigmund_peaktrack(nfound, peakv, x->x_ntrack, x->x_trackv, 2* srate / npts, loud);
 
-    for (i = 0; i < x->x_ntrack; i++)
-    {
-        const int index = i * 3;
-        bufData[index] = x->x_trackv[i].p_freq;
-        bufData[index + 1] = 2*x->x_trackv[i].p_amp;
-        bufData[index + 2] = x->x_trackv[i].p_tmp;
-    }
+}
+
+static void sigmund_clear(t_sigmund *x)
+{
+    if (x->x_trackv)
+        memset(x->x_trackv, 0, x->x_ntrack * sizeof(*x->x_trackv));
+    x->x_infill = x->x_countdown = 0;
 }
 
 static void sigmund_free(t_sigmund *x)
@@ -190,7 +190,6 @@ static void sigmund_free(t_sigmund *x)
     }
     if (x->x_trackv)
         freebytes(x->x_trackv, x->x_ntrack * sizeof(*x->x_trackv));
-    freebytes(x->x_varoutv, x->x_nvarout * sizeof(t_varout));
 }
 
 
@@ -198,7 +197,8 @@ static void sigmund_free(t_sigmund *x)
 // seems like maybe this is the real "next" function
 static void sigmund_tick(t_sigmund *x)
 {
-    if (x->x_infill == x->x_npts)
+    // Only do stuff when x_infill has reached the size of the analysis window
+    if (x->x_infill == x->x_npts) 
     {
         sigmund_doit(x, x->x_npts, x->x_inbuf, x->x_loud, x->x_sr);
         if (x->x_hop >= x->x_npts)
@@ -218,32 +218,41 @@ static void sigmund_tick(t_sigmund *x)
 }
 
 // also needs to run every time the ugen is called
-static t_int *sigmund_perform(t_sigmund *x, t_sample *in, int n)
+// seems like this just fills up the internal buffer (inbuf)
+// with chunks of samples. The other method above (tick)
+// is what processes the inbuf once it is full (reaches size
+// determined by x_npts - the analysis window size).
+// Seems perhaps that countdown is unnecessary if
+// x_infill is handling countdown duties?
+static int sigmund_perform(t_sigmund *x, const t_sample *in, int n)
 {
     if (x->x_hop % n)
-        return (w+4);
+        return -1;
     if (x->x_countdown > 0)
         x->x_countdown -= n;
     else if (x->x_infill != x->x_npts)
     {
         int j;
         t_float *fp = x->x_inbuf + x->x_infill;
+        // Copy the samples into x_inbuf,
+        // starting from where we left off the previous
+        // time this function was called (x_infill)
         for (j = 0; j < n; j++)
             *fp++ = *in++;
+        // Update x_infill to reflect the advanced position
         x->x_infill += n;
     }
-    return (w+4);
+    return 0;
 }
 
 
-static void *sigmund_new(t_symbol *s, int argc, t_atom *argv)
+t_sigmund* sigmund_new()
 {
     t_sigmund *x;
     sigmund_preinit(x);
     
-    
     // set npeaks
-    sigmund_npeak(x, atom_getfloatarg(1, argc, argv));
+    sigmund_npeak(x, 20);
     
     // toggle tracks calculation
     x->x_dotracks = 1;
@@ -253,9 +262,9 @@ static void *sigmund_new(t_symbol *s, int argc, t_atom *argv)
     
     x->x_infill = 0;
     x->x_countdown = 0;
-    x-x_sr = SAMPLE_RATE;
+    x->x_sr = 48000;
     sigmund_npts(x, x->x_npts);
     notefinder_init(&x->x_notefinder);
     sigmund_clear(x);
-    return (x);
+    return x;
 }

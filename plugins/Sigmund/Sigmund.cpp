@@ -12,27 +12,27 @@ Sigmund::Sigmund() {
     mCalcFunc = make_calc_function<Sigmund, &Sigmund::next>();
     numTracks = in0(1);
 
+    state = sigmund_new();
+
     // NECESSARY FOR GET_BUF
     unit->mWorld = mWorld;
     unit->mParent = mParent;
     unit->mInBuf = mInBuf;
-
-    next(1);
 }
 
 void Sigmund::next(int nSamples) {
     const float* input = in(2);
-    const int trackFrequency = 500;
-    const int trackAmplitude = 1;
-    const int trackStart = 0;
+    sigmund_perform(state, input, nSamples);
+    sigmund_tick(state);
+
     GET_BUF
 
-    // write each track
-    for (int i = 0; i < numTracks; ++i) {
-      const int index = i * 3;
-      bufData[index] = trackFrequency;
-      bufData[index + 1] = trackAmplitude;
-      bufData[index + 2] = trackStart;
+    for (int i = 0; i < state->x_ntrack; i++)
+    {
+        const int index = i * 3;
+        bufData[index] = state->x_trackv[i].p_freq;
+        bufData[index + 1] = 2*state->x_trackv[i].p_amp;
+        bufData[index + 2] = state->x_trackv[i].p_tmp;
     }
 }
 

@@ -4,6 +4,7 @@
 #pragma once
 
 #include "SC_PlugIn.hpp"
+#include "glue.cpp"
 
 namespace Sigmund {
 
@@ -20,6 +21,7 @@ private:
 
     // Member variables
     int numTracks = 0;
+    t_sigmund* state;
 
     // NECESSARY FOR GET_BUF
     struct unitPlaceholder {
