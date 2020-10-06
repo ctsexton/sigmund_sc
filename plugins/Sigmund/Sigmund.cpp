@@ -16,25 +16,48 @@ Sigmund::Sigmund() {
     std::cout << "MAKING STATE" << std::endl;
     state = sigmund_new(&x);
     std::cout << "MADE STATE" << std::endl;
+}
 
-    // NECESSARY FOR GET_BUF
-    std::cout << "GETTING WORLD" << std::endl;
-    unit->mWorld = mWorld;
-    std::cout << "GOT WORLD" << std::endl;
-    unit->mParent = mParent;
-    unit->mInBuf = mInBuf;
-    
-    std::cout << "CALLING NEXT ONCE" << std::endl;
-    next(1);
+void Sigmund::get_buf() {
+    const Unit* unit = this;
+
+    float fbufnum = ZIN0(0);
+    if (fbufnum < 0.f) {   
+        fbufnum = 0.f;
+    }
+    if (fbufnum != m_fbufnum) {
+        uint32 bufnum = (int)fbufnum;
+        World* world = unit->mWorld;
+        if (bufnum >= world->mNumSndBufs) {
+            int localBufNum = bufnum - world->mNumSndBufs;
+            Graph* parent = unit->mParent;
+            if (localBufNum <= parent->localBufNum) {
+                m_buf = parent->mLocalSndBufs + localBufNum;
+            } else {
+                bufnum = 0;
+                m_buf = world->mSndBufs + bufnum;
+            }
+        } else {
+            m_buf = world->mSndBufs + bufnum;
+        }
+        m_fbufnum = fbufnum;
+    }
+    SndBuf* buf = m_buf;
+    LOCK_SNDBUF(buf);
+    bufData = buf->data;
+    bufChannels = buf->channels;
+    bufSamples = buf->samples;
+    bufFrames = buf->frames;
+    int mask = buf->mask;
+    int guardFrame = bufFrames - 2;
 }
 
 void Sigmund::next(int nSamples) {
-    std::cout << "NEXT" << std::endl;
     const float* input = in(2);
     sigmund_perform(state, input, nSamples);
-    /* sigmund_tick(state); */
+    sigmund_tick(state);
 
-    GET_BUF
+    get_buf();
 
     for (int i = 0; i < state->x_ntrack; i++)
     {

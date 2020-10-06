@@ -233,7 +233,6 @@ static void sigmund_tick(t_sigmund *x)
 // x_infill is handling countdown duties?
 static int sigmund_perform(t_sigmund *x, const t_sample *in, int n)
 {
-    loginfo("performing...");
     if (x->x_hop % n)
         return -1;
     if (x->x_countdown > 0)
@@ -245,7 +244,6 @@ static int sigmund_perform(t_sigmund *x, const t_sample *in, int n)
         // Copy the samples into x_inbuf,
         // starting from where we left off the previous
         // time this function was called (x_infill)
-        loginfo("Copying stuff...");
         for (j = 0; j < n; j++)
             *fp++ = *in++;
         // Update x_infill to reflect the advanced position

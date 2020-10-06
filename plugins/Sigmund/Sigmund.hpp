@@ -24,15 +24,14 @@ private:
     t_sigmund x;
     t_sigmund* state;
 
-    // NECESSARY FOR GET_BUF
-    struct unitPlaceholder {
-      float m_fbufnum;
-      SndBuf* m_buf;
-      World* mWorld;
-      Graph* mParent;
-      float** mInBuf;
-    };
-    struct unitPlaceholder* unit;
+    // bufstuff
+    void get_buf();
+    SndBuf* m_buf;
+    uint32 m_fbufnum;
+    float* bufData;
+    uint32 bufChannels;
+    uint32 bufSamples;
+    uint32 bufFrames;
 };
 
 } // namespace Sigmund
