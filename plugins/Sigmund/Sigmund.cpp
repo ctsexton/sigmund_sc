@@ -3,6 +3,7 @@
 
 #include "SC_PlugIn.hpp"
 #include "Sigmund.hpp"
+#include <iostream>
 
 InterfaceTable* ft;
 
@@ -12,18 +13,26 @@ Sigmund::Sigmund() {
     mCalcFunc = make_calc_function<Sigmund, &Sigmund::next>();
     numTracks = in0(1);
 
-    state = sigmund_new();
+    std::cout << "MAKING STATE" << std::endl;
+    state = sigmund_new(&x);
+    std::cout << "MADE STATE" << std::endl;
 
     // NECESSARY FOR GET_BUF
+    std::cout << "GETTING WORLD" << std::endl;
     unit->mWorld = mWorld;
+    std::cout << "GOT WORLD" << std::endl;
     unit->mParent = mParent;
     unit->mInBuf = mInBuf;
+    
+    std::cout << "CALLING NEXT ONCE" << std::endl;
+    next(1);
 }
 
 void Sigmund::next(int nSamples) {
+    std::cout << "NEXT" << std::endl;
     const float* input = in(2);
     sigmund_perform(state, input, nSamples);
-    sigmund_tick(state);
+    /* sigmund_tick(state); */
 
     GET_BUF
 

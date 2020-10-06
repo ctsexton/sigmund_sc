@@ -1,4 +1,6 @@
 #include "sigmund.c"
+#include <iostream>
+#include <string>
 
 #define NHIST 100
 
@@ -25,6 +27,11 @@
 #define OUT_TRACKS 4
 #define OUT_SMSPITCH 5
 #define OUT_SMSNONPITCH 6
+
+void loginfo (std::string output) {
+  std::cout << output << std::endl;
+}
+
 
 typedef struct _sigmund
 {
@@ -55,7 +62,7 @@ typedef struct _sigmund
 
 static void sigmund_preinit(t_sigmund *x)
 {
-    x->x_npts = NPOINTS_DEF;
+    x->x_npts = 1024; //NPOINTS_DEF
     x->x_param1 = 6;
     x->x_param2 = 0.5;
     x->x_param3 = 0;
@@ -226,6 +233,7 @@ static void sigmund_tick(t_sigmund *x)
 // x_infill is handling countdown duties?
 static int sigmund_perform(t_sigmund *x, const t_sample *in, int n)
 {
+    loginfo("performing...");
     if (x->x_hop % n)
         return -1;
     if (x->x_countdown > 0)
@@ -237,6 +245,7 @@ static int sigmund_perform(t_sigmund *x, const t_sample *in, int n)
         // Copy the samples into x_inbuf,
         // starting from where we left off the previous
         // time this function was called (x_infill)
+        loginfo("Copying stuff...");
         for (j = 0; j < n; j++)
             *fp++ = *in++;
         // Update x_infill to reflect the advanced position
@@ -245,10 +254,8 @@ static int sigmund_perform(t_sigmund *x, const t_sample *in, int n)
     return 0;
 }
 
-
-t_sigmund* sigmund_new()
+t_sigmund* sigmund_new(t_sigmund* x)
 {
-    t_sigmund *x;
     sigmund_preinit(x);
     
     // set npeaks

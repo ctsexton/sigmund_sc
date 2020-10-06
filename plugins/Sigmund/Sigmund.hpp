@@ -21,6 +21,7 @@ private:
 
     // Member variables
     int numTracks = 0;
+    t_sigmund x;
     t_sigmund* state;
 
     // NECESSARY FOR GET_BUF
