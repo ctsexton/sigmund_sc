@@ -25,31 +25,26 @@ void Sigmund::get_buf() {
     if (fbufnum < 0.f) {   
         fbufnum = 0.f;
     }
-    if (fbufnum != m_fbufnum) {
-        uint32 bufnum = (int)fbufnum;
-        World* world = unit->mWorld;
-        if (bufnum >= world->mNumSndBufs) {
-            int localBufNum = bufnum - world->mNumSndBufs;
-            Graph* parent = unit->mParent;
-            if (localBufNum <= parent->localBufNum) {
-                m_buf = parent->mLocalSndBufs + localBufNum;
-            } else {
-                bufnum = 0;
-                m_buf = world->mSndBufs + bufnum;
-            }
+    uint32 bufnum = (int)fbufnum;
+    World* world = unit->mWorld;
+    if (bufnum >= world->mNumSndBufs) {
+        int localBufNum = bufnum - world->mNumSndBufs;
+        Graph* parent = unit->mParent;
+        if (localBufNum <= parent->localBufNum) {
+            m_buf = parent->mLocalSndBufs + localBufNum;
         } else {
+            bufnum = 0;
             m_buf = world->mSndBufs + bufnum;
         }
-        m_fbufnum = fbufnum;
+    } else {
+        m_buf = world->mSndBufs + bufnum;
     }
+    m_fbufnum = fbufnum;
     SndBuf* buf = m_buf;
-    LOCK_SNDBUF(buf);
     bufData = buf->data;
     bufChannels = buf->channels;
     bufSamples = buf->samples;
     bufFrames = buf->frames;
-    int mask = buf->mask;
-    int guardFrame = bufFrames - 2;
 }
 
 void Sigmund::next(int nSamples) {
