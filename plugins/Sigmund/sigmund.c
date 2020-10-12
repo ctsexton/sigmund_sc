@@ -139,9 +139,11 @@ static int sigmund_cmp_freq(const void *p1, const void *p2)
     else return (0);
 }
 
+// DYNAMIC_MEMORY_ALLOCATION
 static void sigmund_tweak(int npts, t_float *ftreal, t_float *ftimag,
     int npeak, t_peak *peaks, t_float fperbin, int loud)
 {
+    // DYNAMIC_MEMORY_ALLOCATION
     t_peak **peakptrs = (t_peak **)alloca(sizeof (*peakptrs) * (npeak+1));
     t_peak negpeak;
     int peaki, j, k;
@@ -252,6 +254,7 @@ static void sigmund_remask(int maxbin, int bestindex, t_float powmask,
 #define PEAKMASKFACTOR 1.
 #define PEAKTHRESHFACTOR 0.6
 
+// DYNAMIC_MEMORY_ALLOCATION
 static void sigmund_getrawpeaks(int npts, t_float *insamps,
     int npeak, t_peak *peakv, int *nfound, t_float *power, t_float srate,
     int loud, t_float hifreq)
@@ -263,6 +266,7 @@ static void sigmund_getrawpeaks(int npts, t_float *insamps,
     int peakcount = 0;
     t_float *fp1, *fp2;
     t_float *rawreal, *rawimag, *maskbuf, *powbuf;
+    // DYNAMIC_MEMORY_ALLOCATION
     t_float *bigbuf = (t_float *)BUF_ALLOCA(bufsize);
     int maxbin = hifreq/fperbin;
     if (maxbin > npts - NEGBINS)
@@ -386,6 +390,7 @@ static void sigmund_getrawpeaks(int npts, t_float *insamps,
 #define SUBHARMONICS 16
 #define DBPERHALFTONE 0.0
 
+// DYNAMIC_MEMORY_ALLOCATION
 static void sigmund_getpitch(int npeak, t_peak *peakv, t_float *freqp,
     t_float npts, t_float srate, t_float nharmonics, t_float amppower, int loud)
 {
@@ -397,6 +402,7 @@ static void sigmund_getpitch(int npeak, t_peak *peakv, t_float *freqp,
     size_t weight_len = sizeof(t_float) * npit;
     if(weight_len > 65536)
       weight_len = 65536;
+    // DYNAMIC_MEMORY_ALLOCATION
     weights = (t_float *)alloca(weight_len);
     if (npeak < 1)
     {
@@ -997,6 +1003,7 @@ static void sigmund_minpower(t_sigmund *x, t_floatarg f)
     x->x_minpower = f;
 }
 
+// DYNAMIC_MEMORY_ALLOCATION
 static void sigmund_doit(t_sigmund *x, int npts, t_float *arraypoints,
     int loud, t_float srate)
 {
