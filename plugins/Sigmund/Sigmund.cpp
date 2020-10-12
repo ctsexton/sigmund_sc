@@ -4,6 +4,7 @@
 #include "SC_PlugIn.hpp"
 #include "Sigmund.hpp"
 #include <iostream>
+#include <string>
 
 InterfaceTable* ft;
 
@@ -14,13 +15,44 @@ Sigmund::Sigmund() {
     numTracks = in0(1);
 
     std::cout << "MAKING STATE" << std::endl;
-    state = sigmund_new(&x);
+    state = &x;
+
+    sigmund_preinit(state);
+    std::cout << "preinit done" << std::endl;
+    
+    // set npeaks
+    sigmund_npeak(state, 20);
+    
+    // toggle tracks calculation
+
+    std::cout << "setting up tracks" << std::endl;
+    state->x_dotracks = 1;
+    state->x_dopitch = 1;
+    state->x_ntrack = state->x_npeak;
+    state->x_trackv = (t_peak *)getbytes(state->x_ntrack * sizeof(*state->x_trackv));
+    
+    std::cout << "setting up infill" << std::endl;
+    state->x_infill = 0;
+    state->x_countdown = 0;
+    state->x_sr = 48000;
+    sigmund_npts(state, state->x_npts);
+
+    std::cout << "setting bigbuf size" << std::endl;
+    int bigbuf_size = sizeof (t_float) * (2*NEGBINS + 6 * state->x_npts);
+    std::cout << "bigbuf size in bytes is: " << std::to_string(bigbuf_size) << std::endl;
+    std::cout << "Allocating bigbuf" << std::endl;
+    state->bigbuf = (t_float*)RTAlloc(this->mWorld, bigbuf_size);
+
+    notefinder_init(&state->x_notefinder);
+    sigmund_clear(state);
+
     std::cout << "MADE STATE" << std::endl;
 }
 
 void Sigmund::get_buf() {
     const Unit* unit = this;
 
+    loginfo("get fbufnum...");
     float fbufnum = ZIN0(0);
     if (fbufnum < 0.f) {   
         fbufnum = 0.f;
@@ -42,29 +74,34 @@ void Sigmund::get_buf() {
         }
         m_fbufnum = fbufnum;
     }
-    SndBuf* buf = m_buf;
-    LOCK_SNDBUF(buf);
-    bufData = buf->data;
-    bufChannels = buf->channels;
-    bufSamples = buf->samples;
-    bufFrames = buf->frames;
-    int mask = buf->mask;
-    int guardFrame = bufFrames - 2;
+    /* loginfo("lock sndbuf..."); */
+    /* LOCK_SNDBUF(m_buf); */
 }
 
 void Sigmund::next(int nSamples) {
+    loginfo("computing: " + std::to_string(nSamples));
     const float* input = in(2);
+    loginfo("perform...");
     sigmund_perform(state, input, nSamples);
+    loginfo("tick...");
     sigmund_tick(state);
 
+    loginfo("get_buf..");
     get_buf();
 
-    for (int i = 0; i < state->x_ntrack; i++)
+    if (state->x_infill == state->x_npts) 
     {
-        const int index = i * 3;
-        bufData[index] = state->x_trackv[i].p_freq;
-        bufData[index + 1] = 2*state->x_trackv[i].p_amp;
-        bufData[index + 2] = state->x_trackv[i].p_tmp;
+      loginfo("loop over ntrack...");
+      for (int i = 0; i < state->x_ntrack; i++)
+      {
+          const int index = i * 3;
+          loginfo("set freq...");
+          m_buf->data[index] = state->x_trackv[i].p_freq;
+          loginfo("set amp...");
+          m_buf->data[index + 1] = 2*state->x_trackv[i].p_amp;
+          loginfo("set tmp...");
+          m_buf->data[index + 2] = state->x_trackv[i].p_tmp;
+      }
     }
 }
 

@@ -21,17 +21,13 @@ private:
 
     // Member variables
     int numTracks = 0;
-    t_sigmund x;
     t_sigmund* state;
+    t_sigmund x;
 
     // bufstuff
     void get_buf();
     SndBuf* m_buf;
     uint32 m_fbufnum;
-    float* bufData;
-    uint32 bufChannels;
-    uint32 bufSamples;
-    uint32 bufFrames;
 };
 
 } // namespace Sigmund

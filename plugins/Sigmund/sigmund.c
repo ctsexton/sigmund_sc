@@ -254,10 +254,9 @@ static void sigmund_remask(int maxbin, int bestindex, t_float powmask,
 #define PEAKMASKFACTOR 1.
 #define PEAKTHRESHFACTOR 0.6
 
-// DYNAMIC_MEMORY_ALLOCATION
 static void sigmund_getrawpeaks(int npts, t_float *insamps,
     int npeak, t_peak *peakv, int *nfound, t_float *power, t_float srate,
-    int loud, t_float hifreq)
+    int loud, t_float hifreq, t_float *bigbuf)
 {
     t_float oneovern = 1.0/ (t_float)npts;
     t_float fperbin = 0.5 * srate * oneovern, totalpower = 0;
@@ -266,8 +265,6 @@ static void sigmund_getrawpeaks(int npts, t_float *insamps,
     int peakcount = 0;
     t_float *fp1, *fp2;
     t_float *rawreal, *rawimag, *maskbuf, *powbuf;
-    // DYNAMIC_MEMORY_ALLOCATION
-    t_float *bigbuf = (t_float *)BUF_ALLOCA(bufsize);
     int maxbin = hifreq/fperbin;
     if (maxbin > npts - NEGBINS)
         maxbin = npts - NEGBINS;
@@ -380,7 +377,6 @@ static void sigmund_getrawpeaks(int npts, t_float *insamps,
         peakv[i].p_db = sigmund_powtodb(peakv[i].p_amp);
     }
     *nfound = peakcount;
-    BUF_FREEA(bigbuf, bufsize);
 }
 
 /*************** Routines for finding fundamental pitch *************/
@@ -1007,11 +1003,12 @@ static void sigmund_minpower(t_sigmund *x, t_floatarg f)
 static void sigmund_doit(t_sigmund *x, int npts, t_float *arraypoints,
     int loud, t_float srate)
 {
+    // DYNAMIC_MEMORY_ALLOCATION
     t_peak *peakv = (t_peak *)alloca(sizeof(t_peak) * x->x_npeak);
     int nfound, i, cnt;
     t_float freq = 0, power, note = 0;
     sigmund_getrawpeaks(npts, arraypoints, x->x_npeak, peakv,
-        &nfound, &power, srate, loud, x->x_maxfreq);
+        &nfound, &power, srate, loud, x->x_maxfreq, x->bigbuf);
     if (x->x_dopitch)
         sigmund_getpitch(nfound, peakv, &freq, npts, srate, 
         x->x_param1, x->x_param2, loud);

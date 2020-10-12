@@ -52,6 +52,7 @@ typedef struct _sigmund
     t_float x_param1;     /* three parameters for temporary use */
     t_float x_param2;
     t_float x_param3;
+    t_float *bigbuf; /* THE BIG BUF */
     t_notefinder x_notefinder;  /* note parsing state */
     t_peak *x_trackv;           /* peak tracking state */
     int x_ntrack;               /* number of peaks tracked */
@@ -171,14 +172,20 @@ static void sigmund_minpower(t_sigmund *x, t_floatarg f)
 static void sigmund_doit(t_sigmund *x, int npts, t_float *arraypoints,
     int loud, t_float srate)
 {
+    // DYNAMIC_MEMORY_ALLOCATION
+    loginfo("alloc peakv");
     t_peak *peakv = (t_peak *)alloca(sizeof(t_peak) * x->x_npeak);
     int nfound, i, cnt;
     t_float freq = 0, power, note = 0;
 
     // IMPORTANT STUFF:
-    sigmund_getrawpeaks(npts, arraypoints, x->x_npeak, peakv, &nfound, &power, srate, loud, x->x_maxfreq);
+    loginfo("get da peaks...");
+    sigmund_getrawpeaks(npts, arraypoints, x->x_npeak, peakv, &nfound, &power, srate, loud, x->x_maxfreq, x->bigbuf);
+    loginfo("get pitch...");
     sigmund_getpitch(nfound, peakv, &freq, npts, srate, x->x_param1, x->x_param2, loud);
+    loginfo("track them peaks...");
     sigmund_peaktrack(nfound, peakv, x->x_ntrack, x->x_trackv, 2* srate / npts, loud);
+    loginfo("done the sigmund");
 
 }
 
@@ -250,26 +257,4 @@ static int sigmund_perform(t_sigmund *x, const t_sample *in, int n)
         x->x_infill += n;
     }
     return 0;
-}
-
-t_sigmund* sigmund_new(t_sigmund* x)
-{
-    sigmund_preinit(x);
-    
-    // set npeaks
-    sigmund_npeak(x, 20);
-    
-    // toggle tracks calculation
-    x->x_dotracks = 1;
-    x->x_dopitch = 1;
-    x->x_ntrack = x->x_npeak;
-    x->x_trackv = (t_peak *)getbytes(x->x_ntrack * sizeof(*x->x_trackv));
-    
-    x->x_infill = 0;
-    x->x_countdown = 0;
-    x->x_sr = 48000;
-    sigmund_npts(x, x->x_npts);
-    notefinder_init(&x->x_notefinder);
-    sigmund_clear(x);
-    return x;
 }
