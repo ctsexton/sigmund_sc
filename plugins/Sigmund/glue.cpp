@@ -53,7 +53,7 @@ typedef struct _sigmund
     t_float x_param2;
     t_float x_param3;
     t_notefinder x_notefinder;  /* note parsing state */
-    t_peak *x_trackv;           /* peak tracking state */
+    t_peak x_trackv[20];           /* peak tracking state */
     int x_ntrack;               /* number of peaks tracked */
     unsigned int x_dopitch:1;   /* which things to calculate */
     unsigned int x_donote:1;
@@ -62,7 +62,7 @@ typedef struct _sigmund
 
 static void sigmund_preinit(t_sigmund *x)
 {
-    x->x_npts = 1024; //NPOINTS_DEF
+    x->x_npts = NPOINTS_DEF;
     x->x_param1 = 6;
     x->x_param2 = 0.5;
     x->x_param3 = 0;
@@ -76,7 +76,7 @@ static void sigmund_preinit(t_sigmund *x)
     x->x_maxfreq = 1000000;
     x->x_loud = 0;
     x->x_sr = 1;
-    x->x_trackv = 0;
+    /* x->x_trackv = 0; */
     x->x_ntrack = 0;
     x->x_dopitch = x->x_donote = x->x_dotracks = 0;
     x->x_inbuf = 0;
@@ -171,7 +171,8 @@ static void sigmund_minpower(t_sigmund *x, t_floatarg f)
 static void sigmund_doit(t_sigmund *x, int npts, t_float *arraypoints,
     int loud, t_float srate)
 {
-    t_peak *peakv = (t_peak *)alloca(sizeof(t_peak) * x->x_npeak);
+    /* t_peak *peakv = (t_peak *)alloca(sizeof(t_peak) * x->x_npeak); */
+    t_peak peakv[20];
     int nfound, i, cnt;
     t_float freq = 0, power, note = 0;
 
@@ -263,7 +264,7 @@ t_sigmund* sigmund_new(t_sigmund* x)
     x->x_dotracks = 1;
     x->x_dopitch = 1;
     x->x_ntrack = x->x_npeak;
-    x->x_trackv = (t_peak *)getbytes(x->x_ntrack * sizeof(*x->x_trackv));
+    /* x->x_trackv = (t_peak *)getbytes(x->x_ntrack * sizeof(*x->x_trackv)); */
     
     x->x_infill = 0;
     x->x_countdown = 0;
